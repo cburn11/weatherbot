@@ -1,0 +1,12 @@
+[Unit]
+Description=Weatherbot daemon responds to requests sent to cgi
+After=local-fs.target network-online.target
+
+[Service]
+Type=forking
+ExecStart=/opt/weatherbotd
+NonBlocking=yes
+
+[Install]
+WantedBy=multi-user.target
+
