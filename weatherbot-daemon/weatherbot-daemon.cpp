@@ -23,29 +23,31 @@ void handle_msg(char * qs);
 
 int main(int argc, char * argv[]) {
 
+  
+  /*  Use systemd service file to launch daemon 
   becomeDaemon(0);
 
   umask(0);
 
   auto pPasswd = getpwnam("weatherbot");
   setgid(pPasswd->pw_gid);
-  setuid(pPasswd->pw_uid);
+  setuid(pPasswd->pw_uid);*/
   
   if ( mkfifo(szServerFifoPath, S_IRUSR | S_IWUSR | S_IWGRP | S_IRGRP) == -1 && errno != EEXIST ) {
-    
+    syslog(LOG_ERR, "mkfifo(%s) returned -1, errno =  %d", szServerFifoPath, errno);
     return 1;
   }
 
   int serverFd = open(szServerFifoPath, O_RDONLY);
   if( serverFd == -1) {
-
+    syslog(LOG_ERR, "open(%s) returned -1, errno =  %d", szServerFifoPath, errno);
     return 1;
   }
 
   int dummyFd = open(szServerFifoPath, O_WRONLY);
 
   openlog(NULL, 0, LOG_DAEMON);
-  syslog(LOG_INFO, "started.");
+  syslog(LOG_NOTICE, "started.");
   
   for( ; ; ) {
 
