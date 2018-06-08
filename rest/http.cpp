@@ -34,8 +34,7 @@ void GetCoords(std::string loc_str, std::string& loc_address, double& latitude, 
 
   uri_builder uri{U("maps/api/geocode/json")};
   uri.append_query(U("address"), U(loc_str.c_str()));                                                                              
-  //uri.append_query(U("key"), U("AIzaSyDdK6122Wu2rLtg5Wy0JWNgTS6T0YdA7zE"));
-  uri.append_query(U("key"), U("AIzaSyDGfi3ls6qnSuiP93U-QQdPeAdySzFJCxE"));
+  uri.append_query(U("key"), U("--API KEY--"));
   
   http_request req{methods::GET};
   req.set_request_uri(uri.to_uri());
