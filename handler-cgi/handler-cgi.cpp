@@ -8,7 +8,7 @@
 #include <iostream>
 
 #include "utils.h"
-#include "weatherbot.h"
+#include "GenericHandler.h"
 
 void ProcessPostBody(char * szBody) {
 

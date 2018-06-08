@@ -1,12 +1,13 @@
 [Unit]
-Description=Weatherbot daemon responds to requests sent to cgi
+Description=Handler daemon responds to requests sent to cgi
 After=network-online.target
 
 [Service]
 #Type=forking
-ExecStart=/opt/weatherbotd
+ExecStart=/opt/weatherbot/handlerd -c config/config.json
+ExecStop=/opt/weatherbot/handler-test STOP
 TimeoutStartSec=60
-WorkingDirectory=/opt/
+WorkingDirectory=/opt/handler
 Restart=always
 RestartSec=10
 User=weatherbot

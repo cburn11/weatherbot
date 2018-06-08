@@ -1,6 +1,11 @@
-set(CMAKE_EXE_LINKER_FLAGS "-lboost_system -lcrypto -lssl -lcpprest")
 
-add_library (rest rest.cpp)
+include_directories(../headers/)
 
-target_include_directories (rest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+find_package(cpprestsdk REQUIRED)
+
+add_library (rest_utils SHARED http.cpp json_settings.cpp)
+
+target_include_directories (rest_utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(rest_utils PRIVATE cpprestsdk::cpprest)
+
 

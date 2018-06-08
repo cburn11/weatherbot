@@ -1,0 +1,11 @@
+{
+    "commands": [
+	{
+	    "command": "/weatherbot",
+	    "library": "weatherbot-command/libweatherbot_command.so",
+	    "func": "weatherbot_command",
+	    "token": "21348234sdhfjshfj834"
+	}
+    ],
+    "fifo": "/var/spool/cgi/generic_request_handler_fifo"
+}
