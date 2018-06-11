@@ -2,9 +2,27 @@
     "commands": [
 	{
 	    "command": "/weatherbot",
-	    "library": "weatherbot-command/libweatherbot_command.so",
+	    "library": "./libweatherbot_command.so",
 	    "func": "weatherbot_command",
-	    "token": "21348234sdhfjshfj834"
+	    "token": "--token--"
+	},
+	{
+	    "command": "/need",
+	    "library": "need-command/libneed_command.so",
+	    "func": "need_command",
+	    "token": "--token--"
+	}
+    ],
+    "actions": [
+	{
+	    "action": "got_it",
+	    "library": "need-command/libneed_command.so",
+	    "func": "got_it_func"
+	},
+	{
+	    "action": "delete_it",
+	    "library": "need-command/libneed_command.so",
+	    "func": "delete_it_func"
 	}
     ],
     "fifo": "/var/spool/cgi/generic_request_handler_fifo"

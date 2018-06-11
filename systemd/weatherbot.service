@@ -4,14 +4,13 @@ After=network-online.target
 
 [Service]
 #Type=forking
-ExecStart=/opt/weatherbot/handlerd -c config/config.json
-ExecStop=/opt/weatherbot/handler-test STOP
+ExecStart=/opt/handler/handlerd
 TimeoutStartSec=60
 WorkingDirectory=/opt/handler
 Restart=always
 RestartSec=10
-User=weatherbot
-Group=weatherbot
+User=handler
+Group=handler
 
 [Install]
 WantedBy=multi-user.target

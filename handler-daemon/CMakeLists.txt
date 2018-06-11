@@ -1,5 +1,5 @@
-set(CMAKE_EXE_LINKER_FLAGS "-ldl")
-#set(CMAKE_CXX_FLAGS "-g -O0")
+set(CMAKE_EXE_LINKER_FLAGS "-ldl -Wl,--export-dynamic")
+set(CMAKE_CXX_FLAGS "-fPIC")
 
 include_directories(../headers/)
 

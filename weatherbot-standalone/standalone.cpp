@@ -12,6 +12,8 @@
 #include <string>
 #include <iostream>
 
+#include <thread>
+
 #include "http.h"
 
 int main(int argc, char * argv[]) {
@@ -69,31 +71,70 @@ int main(int argc, char * argv[]) {
   std::string json_str;
   
   if( in_path == "" ) {
-  
+
+    std::string humidity;
+    
     if( location != "" && url == "" ) {
 
       double latitude, longitude;
 
       GetCoords(location, loc_address, latitude, longitude);
 
-      url = GetForecastUrl(latitude, longitude);
-    
+      //url = GetForecastUrl(latitude, longitude);
+
+      std::string strLatitude = FormatCoordinate(latitude);
+      std::string strLongitude = FormatCoordinate(longitude);
+      url = GetForecastUrl(strLatitude, strLongitude);
+      
+      humidity = GetHumidity(strLatitude, strLongitude);
+      
     } else if( location == "" && url == "" ) {
 
       url = default_url;
     }
- 
-    std::string forecast = GetForecast(url);
-    std::string temperature, icon_url;
-    GetForecastCurrentTempAndIcon(url, temperature, icon_url);
+
+    std::string strLatitude, strLongitude, forecast;
+    /*
+    std::string forecast = GetForecast(url,
+				       (humidity == "" ? &strLatitude : nullptr),
+				       (humidity == "" ? &strLongitude : nullptr));
+    */
+
+    std::thread forecast_thread{[&url, &forecast, &strLatitude, &strLongitude, &humidity]() {
+
+	forecast = GetForecast(url,
+		       (humidity == "" ? &strLatitude : nullptr),
+		       (humidity == "" ? &strLongitude : nullptr));
+
+	if( strLatitude != "" && strLongitude != "" )
+	  humidity = GetHumidity(strLatitude, strLongitude);
+	
+      }};
+
+    /*
+    if( strLatitude != "" && strLongitude != "" )
+      humidity = GetHumidity(strLatitude, strLongitude);
+    */
+    
+    std::string temperature, icon_url; 
+    //GetForecastCurrentTempAndIcon(url, temperature, icon_url);
+    std::thread temp_thread{[&url, &temperature, &icon_url]() {
+
+	GetForecastCurrentTempAndIcon(url, temperature, icon_url);
+	
+      }};
+
+    forecast_thread.join();
+    temp_thread.join();
  
     std::string header = "#### " + loc_address + "\n";
-    if( temperature != "" ) {
-    header += "Current temperature: " + temperature;
+    if( temperature != "" )
+      header += "Current temperature: " + temperature + "\n";
+
+    if( humidity != "" )
+      header += "Current humidity: " + humidity + "%\n";    
   
     json_str = BuildJSONAttachment(header, forecast, icon_url);
-
-    }
     
   } else {
 

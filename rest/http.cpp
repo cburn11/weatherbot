@@ -28,13 +28,24 @@ using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
 
 
+std::string FormatCoordinate(double coord) {
+
+  std::stringstream lat_stream;
+  lat_stream << std::fixed << std::setprecision(4) << coord;
+  std::string lat_str = lat_stream.str();
+  lat_str.erase( lat_str.find_last_not_of('0') + 1, std::string::npos );
+
+  return lat_stream.str();
+}
+
 void GetCoords(std::string loc_str, std::string& loc_address, double& latitude, double& longitude) {
 
   http_client client{U("https://maps.googleapis.com")};
 
   uri_builder uri{U("maps/api/geocode/json")};
   uri.append_query(U("address"), U(loc_str.c_str()));                                                                              
-  uri.append_query(U("key"), U("--API KEY--"));
+  uri.append_query(U("key"), U("--API-KEY--"));
+  
   
   http_request req{methods::GET};
   req.set_request_uri(uri.to_uri());
@@ -55,7 +66,8 @@ void GetCoords(std::string loc_str, std::string& loc_address, double& latitude, 
   longitude = location_obj["lng"].as_double();
 }
 
-std::string GetForecastUrl(double lat, double lng) {
+//std::string GetForecastUrl(double lat, double lng) {
+std::string GetForecastUrl(const std::string& lat, const std::string& lng) {
 
   std::string forecast_url;
 
@@ -63,19 +75,9 @@ std::string GetForecastUrl(double lat, double lng) {
 
   std::string endpoint = "/points/";
 
-  std::stringstream lat_stream;
-  lat_stream << std::fixed << std::setprecision(4) << lat;
-  std::string lat_str = lat_stream.str();
-  lat_str.erase( lat_str.find_last_not_of('0') + 1, std::string::npos );
-  
-  std::stringstream lng_stream;
-  lng_stream << std::fixed << std::setprecision(4) << lng;
-  std::string lng_str = lng_stream.str();
-  lng_str.erase( lng_str.find_last_not_of('0') + 1, std::string::npos );
-  
-  endpoint += lat_str;
+  endpoint += lat;
   endpoint += ",";
-  endpoint += lng_str;
+  endpoint += lng;
   
   uri_builder uri{endpoint.c_str()};
   http_request req{methods::GET};
@@ -95,7 +97,8 @@ std::string GetForecastUrl(double lat, double lng) {
  
 }
 
-std::string GetForecast(const std::string& forecast_url) {
+std::string GetForecast(const std::string& forecast_url,
+			std::string * pStrLatitude = nullptr, std::string * pStrLongitude = nullptr) {
 
   std::string forecast;
 
@@ -136,6 +139,24 @@ std::string GetForecast(const std::string& forecast_url) {
 
       forecast += detailedForecast;
       forecast += "\n\n";
+    }
+
+    if( pStrLatitude && pStrLongitude ) {
+
+      auto geometry = forecast_json["geometry"];
+
+      for( auto elem : geometry["geometries"].as_array() ) {
+
+	if( elem["type"].as_string() == "Point") {
+
+	  auto coords = elem["coordinates"].as_array();
+
+	  *pStrLongitude = FormatCoordinate(coords[0].as_double());
+	  *pStrLatitude = FormatCoordinate(coords[1].as_double());
+	  
+	  break;
+	}	
+      }      
     }
   }
   
@@ -180,6 +201,27 @@ bool GetForecastCurrentTempAndIcon(const std::string& forecast_url,
   icon_url = lIcon_url;
   
   return ret;
+}
+
+std::string GetHumidity(const std::string& lat, const std::string& lng) {
+
+  http_client client{U("https://api.openweathermap.org")};
+
+  uri_builder uri{U("data/2.5/weather")};
+  uri.append_query(U("lat"), lat);
+  uri.append_query(U("lon"), lng);
+  uri.append_query(U("APPID"), "--API-KEY--");
+
+  http_request req{methods::GET};
+  req.set_request_uri(uri.to_uri());
+
+  http_response resp = client.request(req).get();
+
+  json::value resp_json = resp.extract_json(true).get();
+  json::value main = resp_json["main"];
+
+  return std::to_string(main["humidity"].as_integer());
+  
 }
 
 std::string BuildJSONAttachment(const std::string& header, const std::string& forecast,
@@ -251,4 +293,45 @@ void SendAttachment(const std::string& url, const std::string& header,
   
   SendJSON(url, json_str);
 
+}
+
+std::string BuildNeedAttachment(const std::string& text) {
+
+  auto got_it_context = json::value::object();
+  got_it_context["action"] = json::value::string("need_got_it");
+  got_it_context["text"] = json::value::string(text);
+  
+  auto got_it_integration = json::value::object();
+  got_it_integration["url"] = json::value::string("http://cgi-server.danger-rocket.com/cgi-bin/handler-cgi");
+  got_it_integration["context"] = got_it_context;
+
+  json::value got_it_action = json::value::object();
+  got_it_action["name"] = json::value::string("Got it");
+  got_it_action["integration"] = got_it_integration;
+
+  auto delete_it_context = json::value::object();
+  delete_it_context["action"] = json::value::string("need_delete_it");
+
+  auto delete_it_integration = json::value::object();
+  delete_it_integration["url"] = json::value::string("http://cgi-server.danger-rocket.com/cgi-bin/handler-cgi");
+  delete_it_integration["context"] = delete_it_context;
+
+  auto delete_it_action = json::value::object();
+  delete_it_action["name"] = json::value::string("Delete");
+  delete_it_action["integration"] = delete_it_integration;  
+  
+  json::value attachment = json::value::object();
+  attachment["text"] = json::value::string(text);
+  attachment["actions"] = json::value::array(1);
+
+  attachment["actions"][0] = got_it_action;
+  //attachment["actions"][1] = delete_it_action;
+  
+  json::value payload = json::value::object();
+  payload["attachments"] = json::value::array(1);
+  payload["attachments"][0] = attachment;
+  payload["response_type"] = json::value::string("in_channel");
+  payload["username"] = json::value::string("Need bot");
+
+  return payload.serialize();
 }

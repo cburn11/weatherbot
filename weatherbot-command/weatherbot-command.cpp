@@ -7,10 +7,10 @@
 
 #include <string>
 #include <iostream>
+#include <thread>
 
 #include "http.h"
 #include "Connections.hxx"
-
 
 extern "C" void * weatherbot_command(const Connection * pConnection) {
 
@@ -36,35 +36,54 @@ extern "C" void * weatherbot_command(const Connection * pConnection) {
   if( response_url == "" )
     return nullptr;
 
-  std::cout << "Response url: " << response_url << std::endl;
+  //std::cout << "Response url: " << response_url << std::endl;
   
   auto text = pConnection->GetValue("text");
-  std::cout << "Text: " << text << std::endl;
+  std::cout << "Text: (" << text << ")" << std::endl;
   if( text != "" ) {
 
     std::string loc_address;
     double latitude, longitude;
 
     GetCoords(text, loc_address, latitude, longitude);
-    std::cout << loc_address << ", " << std::to_string(latitude) << ", " << std::to_string(longitude) << std::endl;
-    
-    auto forecast_url = GetForecastUrl(latitude, longitude);
-    std::cout << forecast_url << std::endl;
+    //std::cout << loc_address << ", " << std::to_string(latitude) << ", " << std::to_string(longitude) << std::endl;
 
-    auto forecast = GetForecast(forecast_url);
-    std::cout << forecast << std::endl;
+    std::string strLatitude = FormatCoordinate(latitude);
+    std::string strLongitude = FormatCoordinate(longitude);
+
+    std::string humidity;
+    std::thread humidity_thread{[&humidity, &strLatitude, &strLongitude]() {
+	humidity = GetHumidity(strLatitude, strLongitude);
+      }};
     
+    //auto forecast_url = GetForecastUrl(latitude, longitude);
+    auto forecast_url = GetForecastUrl(strLatitude, strLongitude);
+    //std::cout << forecast_url << std::endl;
+    
+    std::string forecast;
+    std::thread forecast_thread{[&forecast, &forecast_url]() {
+	forecast = GetForecast(forecast_url);
+	//std::cout << forecast << std::endl;
+      }};
+     
     std::string temperature, icon_url;
-    GetForecastCurrentTempAndIcon(forecast_url, temperature, icon_url);
-    std::cout << temperature << ", " << icon_url << std::endl;
+    std::thread temp_thread{[&forecast_url, &temperature, &icon_url]() {
+      GetForecastCurrentTempAndIcon(forecast_url, temperature, icon_url);
+      //std::cout << temperature << ", " << icon_url << std::endl;
+      }};
+  
+    forecast_thread.join();
+    temp_thread.join();
+    humidity_thread.join();
     
     std::string header = "#### ";
     header += loc_address + "\n";
 
     if( temperature.length() > 0 )
-      header += "Current temperature: " + temperature;
+      header += "Current temperature: " + temperature + "\n";
 
-    header += "\n";
+    if( humidity.length() > 0 )
+      header += "Current humidity: " + humidity + "%\n";
 
     SendAttachment(response_url, header, forecast, icon_url);  
     
@@ -91,9 +110,7 @@ extern "C" void * weatherbot_command(const Connection * pConnection) {
     SendJSON(response_url, response);
   }
 
-  std::cout << "End thread" << std::endl;
-  
-  delete pConnection;
-  
+  //std::cout << "End thread" << std::endl;
+    
   return nullptr;
 }

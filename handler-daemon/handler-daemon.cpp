@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include <string>
 #include <utility>
@@ -8,6 +9,8 @@
 
 int main(int argc, char * argv[]) {
 
+  umask(0);
+  
   // Parse command line;
 
   std::string strConfigPath{"config/config.json"};
