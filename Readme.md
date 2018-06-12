@@ -13,9 +13,9 @@ Google's geocoding api conveniently converts a location string into latitude and
 The weatherbot incoming webhook is a pair of bash scripts suitable for cron jobs which download a forecast from the National Weather Service and then send that forecast to MatterMost.
 
 # handlerd
-handlerdd should be run owned by a usernamed weatherbot, which has write access to /var/spool/cgi. The user that runs the cgi process should belong to the weatherbot group. Prior to compiling, rest/rest.cpp @GetCoords should have your google api added to the query string portion of the uri. 
+handlerdd should be run by a user named weatherbot, which has write access to /var/spool/cgi. The user that runs the cgi process should belong to the weatherbot group. In order for the handler daemon to send information back to the cgi process, the user that runs the daemon should belong to the group that runs the cgi process. Prior to compiling, rest/rest.cpp @GetCoords should have your google api added to the query string portion of the uri. 
 
-handlerd loads from a config.json that specifies what commands the daemon responds.
+handlerd loads from a config.json that specifies the commands to which the daemon responds.
 
 <img src="https://github.com/cburn11/weatherbot/raw/master/Screenshot_20180601-220531.png">
 
