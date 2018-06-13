@@ -217,7 +217,7 @@ void FormUrlEncodedConnection::Process(const ConnectionHandler * pConnectionHand
 
     // check tokens
     std::string connection_token  = GetValue("token");
-    std::string command_token = GetValue("token");
+    std::string command_token = pCommand->GetValue("token");
     if( connection_token != command_token && command_token != ""  ) {
       std::cout << "Connection token: " << connection_token << " does not match command token." << std::endl;
       return;
