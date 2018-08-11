@@ -44,7 +44,7 @@ void GetCoords(std::string loc_str, std::string& loc_address, double& latitude, 
 
   uri_builder uri{U("maps/api/geocode/json")};
   uri.append_query(U("address"), U(loc_str.c_str()));                                                                              
-  uri.append_query(U("key"), U("--API-KEY--"));
+  uri.append_query(U("key"), U("--API KEY--"));
   
   
   http_request req{methods::GET};
@@ -210,7 +210,7 @@ std::string GetHumidity(const std::string& lat, const std::string& lng) {
   uri_builder uri{U("data/2.5/weather")};
   uri.append_query(U("lat"), lat);
   uri.append_query(U("lon"), lng);
-  uri.append_query(U("APPID"), "--API-KEY--");
+  uri.append_query(U("APPID"), "--API KEY--");
 
   http_request req{methods::GET};
   req.set_request_uri(uri.to_uri());
@@ -334,4 +334,23 @@ std::string BuildNeedAttachment(const std::string& text) {
   payload["username"] = json::value::string("Need bot");
 
   return payload.serialize();
+}
+
+std::string BuildEmoticonResponse(const std::string& user_name, const std::string& text) {
+
+  auto json = json::value::object();
+  json["text"] = json::value::string(text);
+  if( user_name != "" ) {
+
+    json["username"] = json::value::string(user_name);
+    json["response_type"] = json::value::string("in_channel");
+
+  } else {
+
+    json["username"] = json::value::string("Emote bot");
+    json["response_type"] = json::value::string("ephemeral");
+
+  }
+  
+  return json.serialize();
 }

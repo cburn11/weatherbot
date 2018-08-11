@@ -1,29 +1,55 @@
 {
     "commands": [
-	{
-	    "command": "/weatherbot",
-	    "library": "./libweatherbot_command.so",
-	    "func": "weatherbot_command",
-	    "token": "--token--"
-	},
-	{
-	    "command": "/need",
-	    "library": "need-command/libneed_command.so",
-	    "func": "need_command",
-	    "token": "--token--"
-	}
+        {
+            "command": "/weatherbot",
+            "library": "weatherbot-command/libweatherbot_command.so",
+            "func": "weatherbot_command",
+            "token": "--token--"
+        },
+        {
+            "command": "/need",
+            "library": "need-command/libneed_command.so",
+            "func": "need_command",
+            "token": "--token--"
+        },
+        {
+            "command": "/emoji",
+            "library": "emoticon-command/libemoticon_command.so",
+            "func": "emoticon_command",
+            "token": "--token--",
+            "init": {
+                "emoticons": [
+                    {
+                        "name": "butt",
+                        "encoded": "%28%E2%80%BF%CB%A0%E2%80%BF%29"
+                    },
+                    {
+                        "name": "molesta",
+                        "encoded": "%28%E2%80%A2%29%28%E2%80%A2%29%D4%85%28%E2%89%96%E2%8C%A3%E2%89%96%D4%85%29"
+                    },
+                    {
+                        "name": "wink",
+                        "encoded": "%E0%B2%A0%E2%80%BF%E2%86%BC"
+                    },
+                    {
+                        "name": "fu",
+                        "encoded": "%E2%95%AD%E2%88%A9%E2%95%AE%28-_-%29%E2%95%AD%E2%88%A9%E2%95%AE"
+                    }
+                ]
+            }
+        }
     ],
     "actions": [
-	{
-	    "action": "got_it",
-	    "library": "need-command/libneed_command.so",
-	    "func": "got_it_func"
-	},
-	{
-	    "action": "delete_it",
-	    "library": "need-command/libneed_command.so",
-	    "func": "delete_it_func"
-	}
+        {
+            "action": "need_got_it",
+            "library": "need-command/libneed_command.so",
+            "func": "got_it_func"
+        },
+        {
+            "action": "delete_it",
+            "library": "need-command/libneed_command.so",
+            "func": "delete_it_func"
+        }
     ],
     "fifo": "/var/spool/cgi/generic_request_handler_fifo"
 }

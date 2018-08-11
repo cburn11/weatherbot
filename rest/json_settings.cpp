@@ -9,7 +9,29 @@ using namespace web::http;                  // Common HTTP functionality
 using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
 
-PIntegration_map_type  LoadConfigFromJSON(const std::string& path, std::string& fifoPath, PIntegration_map_type * paction_map) {
+PEmote_map_type LoadEmoteFromJSON(const std::string strJSON) {
+
+  std::cout << "LoadEmoteFromJSON(" << strJSON << ")" << std::endl;
+  
+  auto pemote_map = std::make_unique<std::unordered_map<std::string, std::string>>();
+
+  auto emote_json = web::json::value::parse(strJSON);
+  auto emoticons = emote_json["emoticons"].as_array();
+
+  for( auto emoticon : emoticons ) {
+
+    pemote_map->insert(
+		       std::make_pair(
+				      emoticon["name"].as_string(),
+				      emoticon["encoded"].as_string()
+				      )
+		       );
+  }
+  
+  return pemote_map;
+}
+
+PIntegration_map_type LoadConfigFromJSON(const std::string& path, std::string& fifoPath, PIntegration_map_type * paction_map) {
 
   if( path == "" ) {
     std::cout << "path null" << std::endl;
@@ -31,23 +53,34 @@ PIntegration_map_type  LoadConfigFromJSON(const std::string& path, std::string& 
   if( json_buffer ) {
 
     int cbRead = read(fd, json_buffer, s.st_size);
-    std::cout << "Read: " << json_buffer << std::endl;
+    //std::cout << "Read: " << json_buffer << std::endl;
     
     json::value config_json = web::json::value::parse(json_buffer);
     auto commands = config_json["commands"].as_array();
     for( auto command : commands ) {
-      std::string strCommand = command.as_object()["command"].as_string();
-      std::string strLibPath = command.as_object()["library"].as_string();
-      std::string strFuncName = command.as_object()["func"].as_string();
-      std::string strToken = command.as_object()["token"].as_string();
+      
+      auto cmd_obj = command.as_object();
+      
+      std::string strCommand = cmd_obj["command"].as_string();
+      std::string strLibPath = cmd_obj["library"].as_string();
+      std::string strFuncName = cmd_obj["func"].as_string();
+      std::string strToken = cmd_obj["token"].as_string();
+
+      std::string strInit;
+      try {
+	auto init_obj = cmd_obj.at("init");
+	strInit = init_obj.serialize();
+      } catch( std::exception ) {
+	strInit = "";
+      }
       
       /*auto pcommand = std::make_unique<Command>(std::move(strCommand), std::move(strLibPath),
 	std::move(strFuncName), std::move(strToken));*/
-      std::unique_ptr<Integration> pcommand{new Command{std::move(strCommand), std::move(strLibPath),
-	    std::move(strFuncName), std::move(strToken)}};
+      std::unique_ptr<Integration> pcommand{new Command{std::string{strCommand}, std::move(strLibPath),
+										   std::move(strFuncName), std::move(strToken), std::move(strInit)}};
       
       
-      strCommand = command.as_object()["command"].as_string();
+      //strCommand = command.as_object()["command"].as_string();
 
       auto cmd_pair = std::make_pair(strCommand, std::move(pcommand));
 
@@ -61,7 +94,7 @@ PIntegration_map_type  LoadConfigFromJSON(const std::string& path, std::string& 
       std::string strFuncName = action.as_object()["func"].as_string();
 
       auto paction = std::make_unique<Action>(std::move(strAction), std::move(strLibPath),
-						std::move(strFuncName));
+					      std::move(strFuncName));
       
       strAction = action.as_object()["action"].as_string();
 

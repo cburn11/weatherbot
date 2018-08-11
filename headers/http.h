@@ -32,4 +32,6 @@ void SendAttachment(const std::string& url, const std::string& header,
 		    const std::string& forecast, const std::string& icon);
 
 std::string BuildNeedAttachment(const std::string& text);
+
+std::string BuildEmoticonResponse(const std::string& user_name, const std::string& text);
 #endif // __HTTP_DEFS_

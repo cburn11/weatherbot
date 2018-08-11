@@ -14,7 +14,7 @@ public:
   using cmd_func = void * (*)(const Connection * pConn);
   
   template <typename T>
-  Integration(T&& lib_path, T&& func_name);
+  Integration(T&& lib_path, T&& func_name, T&& init);
   virtual ~Integration();
 
   cmd_func m_func = nullptr;
@@ -27,7 +27,8 @@ private:
 
   std::string m_LibPath;
   std::string m_FuncName;
-  
+
+  std::string m_init;
 };
 
 class Command : public Integration {
@@ -35,7 +36,7 @@ class Command : public Integration {
 public:
 
   template <typename T>
-  Command(T&& command, T&& lib_path, T&& func_name, T&& token);
+  Command(T&& command, T&& lib_path, T&& func_name, T&& token, T&& init);
 
   std::string GetValue(const std::string& key) const override;
   

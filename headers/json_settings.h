@@ -15,4 +15,7 @@ PIntegration_map_type  LoadConfigFromJSON(const std::string& path, std::string& 
 
 void ParseJSONConnection(const std::string& strJSON, std::unordered_map<std::string, std::string>& kv_pairs);
 
+using PEmote_map_type = std::unique_ptr<std::unordered_map<std::string, std::string>>;
+PEmote_map_type LoadEmoteFromJSON(const std::string strJSON);
+
 #endif // __JSON_DEFS_

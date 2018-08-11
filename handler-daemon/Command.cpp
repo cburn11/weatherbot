@@ -9,8 +9,8 @@
 
 
 template <typename T>
-Integration::Integration(T&& lib_path, T&& func_name) :
-  m_LibPath{std::forward<T>(lib_path)}, m_FuncName{std::forward<T>(func_name)} {
+Integration::Integration(T&& lib_path, T&& func_name, T&& init) :
+  m_LibPath{std::forward<T>(lib_path)}, m_FuncName{std::forward<T>(func_name)}, m_init{std::forward<T>(init)} {
 
     dlerror();
     m_hLib = dlopen(m_LibPath.c_str(), RTLD_NOW);
@@ -19,14 +19,14 @@ Integration::Integration(T&& lib_path, T&& func_name) :
       return ;
     }
 
-    using init_func = int (*)(void);
+    using init_func = int (*)(void *);
     auto need_init = (init_func) dlsym(m_hLib, "NeedInit");
     auto lib_init = (init_func) dlsym(m_hLib, "Init");
 
     if( need_init && lib_init ) {
 
-      if( need_init() > 0 )
-	lib_init();
+      if( need_init(nullptr) > 0 )
+	lib_init((void *) &m_init);
     }
 
     m_func = (cmd_func) dlsym(m_hLib, m_FuncName.c_str());
@@ -53,11 +53,11 @@ std::string Integration::GetValue(const std::string& key) const {
   return "";
 }
 
-template Command::Command(std::string&&, std::string&&, std::string&&, std::string&&);
+template Command::Command(std::string&&, std::string&&, std::string&&, std::string&&, std::string&&);
 
 template <typename T>
-Command::Command(T&& command, T&& lib_path, T&& func_name, T&& token) :
-  Integration{std::forward<T>(lib_path), std::forward<T>(func_name)} {
+Command::Command(T&& command, T&& lib_path, T&& func_name, T&& token, T&& init) :
+  Integration{std::forward<T>(lib_path), std::forward<T>(func_name), std::forward<T>(init)} {
 
   m_command = std::forward<T>(command);
   m_Token = std::forward<T>(token);
@@ -81,7 +81,7 @@ template Action::Action(std::string&&, std::string&&, std::string&&);
 
 template <typename T>
 Action::Action(T&& action, T&& lib_path, T&& func_name) :
-  Integration{std::forward<T>(lib_path), std::forward<T>(func_name)} {
+  Integration{std::forward<T>(lib_path), std::forward<T>(func_name), std::forward<T>(std::string{""})} {
 
   m_action = std::forward<T>(action);
   
